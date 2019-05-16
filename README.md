@@ -11,10 +11,9 @@ The architecture follows the architecture in [GOTURN](https://arxiv.org/pdf/1604
 ## Instructions
 1. Obtain data from [Plant Tracer homepage](https://www.planttracer.com/).
 2. Clone this repository.
-3. Make sure `pipenv` is installed. If not, run the command `pip install pipenv` to install it.
-4. Navigate to the root directory of this repository and run `pipenv install`. This will install all the necessary packages to run this project.
-5. Modify the `run.py` file and run it to start the training procedure. This project uses [Comet](https://www.comet.ml) for all visualizations. Add your comet API key in the `run.py` file to see visualizations.
-6. The models are saved in `models` folder and validation and testing results are stored in the `logs` directory and can be visualized with the `viz.py` file.
+3. This project uses `conda` environment. Create the conda virtual environment using `conda env create -f environment.yaml`.
+4. Modify the `run.py` file and run it to start the training procedure. This project uses [Comet](https://www.comet.ml) for all visualizations. Add your comet API key in the `run.py` file to see visualizations.
+5. The models are saved in `models` folder and validation and testing results are stored in the `logs` directory and can be visualized with the `viz.py` file.
 
 ## Report
 This repository contains the code used for submission of this [Report](./misc/Report.pdf).
