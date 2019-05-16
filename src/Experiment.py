@@ -53,7 +53,7 @@ class Experiment:
         self.data = Data(data_path, target_size=self.image_size, transforms=augment)
         self.comet = None
         if comet_api:
-            self.comet = Comet(api_key=comet_api, workspace="aakaashjois")
+            self.comet = Comet(api_key=comet_api)
             self.comet.log_parameter('learning_rate', learning_rate)
             self.comet.log_parameter('image_size', image_size)
             self.comet.log_parameter('augment', augment)
@@ -205,10 +205,6 @@ class Experiment:
             self.comet.log_parameter('batch_size', batch_size)
         loss_per_epoch = []
         preds_per_epoch = []
-        # Run the model without any training to get a baseline prediction
-        if validate:
-            validation_loss, validation_preds = self.__validate__()
-            preds_per_epoch.append(validation_preds)
         # Set the model to training mode
         self.model.train()
         # Create a DataLoader to feed data to the model
@@ -217,7 +213,7 @@ class Experiment:
         # Run for @epochs number of epochs
         for epoch in range(epochs):
             if self.comet:
-                self.comet.log_current_epoch(epoch)
+                self.comet.log_metric('epoch', epoch)
             running_loss = []
             for step, data in enumerate(tqdm(dataloader,
                                              total=int(len(self.data) / batch_size),
@@ -225,9 +221,13 @@ class Experiment:
                 loss = self.__train_step__(data)
                 running_loss.append(loss.item())
             training_loss = sum(running_loss) / len(running_loss)
+            if self.comet:
+                self.comet.log_metric('mean_train_loss', training_loss)
             loss_per_epoch.append(sum(running_loss) / len(running_loss))
             if validate:
                 validation_loss, validation_preds = self.__validate__()
+                if self.comet:
+                    self.comet.log_metric('mean_validation_loss', validation_loss)
                 preds_per_epoch.append(validation_preds)
                 print('Validation loss: {}'.format(sum(validation_loss) / len(validation_loss)))
             # Save the model at this stage
