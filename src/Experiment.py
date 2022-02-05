@@ -48,7 +48,7 @@ class Experiment:
         self.criterion = torch.nn.L1Loss()
         self.optimizer = torch.optim.SGD(filter(lambda p: p.requires_grad, self.model.parameters()), lr=learning_rate)
         self.model_name = str(datetime.datetime.now()).split('.')[0].replace(':', '-').replace(' ', '-')
-        self.model_name = save_name if save_name else self.model_name
+        self.model_name = save_name or self.model_name
         self.augment = augment
         self.data = Data(data_path, target_size=self.image_size, transforms=augment)
         self.comet = None
@@ -105,14 +105,12 @@ class Experiment:
         if self.comet:
             self.comet.test()
         self.model.eval()
-        test_preds = []
         test_loss = []
         video_frames = self.data.video_frames[-1]
         video_annotations = self.data.video_annotations[-1]
         p_a = video_annotations[0]
         p_f = video_frames[0]
-        test_preds.append(p_a)
-
+        test_preds = [p_a]
         for i in tqdm(range(1, len(video_annotations)), desc='Validating'):
             c_a = video_annotations[i]
             c_f = video_frames[i]
@@ -148,14 +146,12 @@ class Experiment:
         if self.comet:
             self.comet.validate()
         self.model.eval()
-        validation_preds = []
         validation_loss = []
         video_frames = self.data.video_frames[-1]
         video_annotations = self.data.video_annotations[-1]
         p_a = video_annotations[0]
         p_f = video_frames[0]
-        validation_preds.append(p_a)
-
+        validation_preds = [p_a]
         for i in tqdm(range(1, len(video_annotations)), desc='Validating'):
             c_a = video_annotations[i]
             c_f = video_frames[i]
@@ -215,9 +211,7 @@ class Experiment:
             if self.comet:
                 self.comet.log_metric('epoch', epoch)
             running_loss = []
-            for step, data in enumerate(tqdm(dataloader,
-                                             total=int(len(self.data) / batch_size),
-                                             desc='Epoch {}'.format(epoch))):
+            for data in tqdm(dataloader, total=len(self.data) // batch_size, desc='Epoch {}'.format(epoch)):
                 loss = self.__train_step__(data)
                 running_loss.append(loss.item())
             training_loss = sum(running_loss) / len(running_loss)

@@ -59,7 +59,7 @@ class Data(Dataset):
         -------
             int: Length of dataset
         """
-        return sum([len(videos) - 1 for videos in self.video_frames])
+        return sum(len(videos) - 1 for videos in self.video_frames)
 
     def __getitem__(self, index):
         """
@@ -95,11 +95,9 @@ class Data(Dataset):
         """
         if len(self.video_annotations) != len(self.video_frames):
             raise ValueError('Sizes of annotations and videos do not match')
-        # Also make a check to see if number of frames in each video and number of annotations for each video match
-        else:
-            for i, d in enumerate(zip(self.video_annotations, self.video_frames)):
-                if d[0].shape[0] != d[1].shape[0]:
-                    raise ValueError('Sizes of annotations and videos do not match in {}'.format(i + 1))
+        for i, d in enumerate(zip(self.video_annotations, self.video_frames)):
+            if d[0].shape[0] != d[1].shape[0]:
+                raise ValueError('Sizes of annotations and videos do not match in {}'.format(i + 1))
 
     @staticmethod
     def load_pickles(path: Path):
@@ -298,37 +296,36 @@ class Data(Dataset):
         bbox = np.divide(bbox, self.target_size)
 
         # Apply transformations
-        if not validate:
-            if self.transforms:
-                try:
-                    x_min, y_max, x_max, y_min = bbox
-                    bbox = np.array([x_min, y_min, x_max, y_max])
-                    previous_augmented = {'image': previous_cropped}
-                    current_augmented = {'image': current_cropped, 'bboxes': [bbox], 'category_id': [0]}
-                    if np.random.random() > 0.5:
-                        try:
-                            previous_augmented = self.prev_hflip(**previous_augmented)
-                            current_augmented = self.curr_hflip(**current_augmented)
-                        except Exception as e:
-                            print(e)
-                    if np.random.random() > 0.5:
-                        try:
-                            previous_augmented = self.prev_ssr(**previous_augmented)
-                            current_augmented = self.curr_ssr(**current_augmented)
-                        except Exception as e:
-                            print(e)
-                    if np.random.random() > 0.5:
-                        try:
-                            previous_augmented = self.prev_bri(**previous_augmented)
-                            current_augmented = self.curr_bri(**current_augmented)
-                        except Exception as e:
-                            print(e)
-                    previous_cropped = previous_augmented['image']
-                    current_cropped = current_augmented['image']
-                    x_min, y_min, x_max, y_max = bbox
-                    bbox = np.array([x_min, y_max, x_max, y_min])
-                except Exception as e:
-                    print(e)
+        if not validate and self.transforms:
+            try:
+                x_min, y_max, x_max, y_min = bbox
+                bbox = np.array([x_min, y_min, x_max, y_max])
+                previous_augmented = {'image': previous_cropped}
+                current_augmented = {'image': current_cropped, 'bboxes': [bbox], 'category_id': [0]}
+                if np.random.random() > 0.5:
+                    try:
+                        previous_augmented = self.prev_hflip(**previous_augmented)
+                        current_augmented = self.curr_hflip(**current_augmented)
+                    except Exception as e:
+                        print(e)
+                if np.random.random() > 0.5:
+                    try:
+                        previous_augmented = self.prev_ssr(**previous_augmented)
+                        current_augmented = self.curr_ssr(**current_augmented)
+                    except Exception as e:
+                        print(e)
+                if np.random.random() > 0.5:
+                    try:
+                        previous_augmented = self.prev_bri(**previous_augmented)
+                        current_augmented = self.curr_bri(**current_augmented)
+                    except Exception as e:
+                        print(e)
+                previous_cropped = previous_augmented['image']
+                current_cropped = current_augmented['image']
+                x_min, y_min, x_max, y_max = bbox
+                bbox = np.array([x_min, y_max, x_max, y_min])
+            except Exception as e:
+                print(e)
 
         # Convert images from channel last to channel first format
         previous_cropped = self.convert_channels(previous_cropped, channel_first=True)
